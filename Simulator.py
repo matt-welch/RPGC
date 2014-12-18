@@ -16,11 +16,31 @@ gsimHrsPerSec = 1
 LEDSTATUS=True
 LEDS = []
 PROGMODE = "sim" #  or "real" when using GPIO
+
+class Event: 
+    """ Event class to hold generic events on GPIO pins """
+    def __init__(self, pin, time, setting):
+        self.pin = pin # a GPIO pin
+        self.time = time # a time in decimal
+        assertError = "{0} is not a valid setting for a GPIOPIN".format(setting)
+        assert ((setting == "on") or (setting == "off")), assertError
+        self.setting = setting # a string representing the pin action
+
+    def action():
+        self.pin.setStatus(setting)
+
+eventList = [Event(11,7.0,"on"), Event(12, 8.0, "on"), Event(11,9.0, "off"), Event(12,10.0,"on")]
+
 if(PROGMODE == "real"):
     import RPi.GPIO as GPIO
+    validGPIOPins=[       7,    11,     12,    13,      15,     16,     18     ,22]
+    validGPIONames=["GPIO7","GPIO0","GPIO1","GPIO2","GPIO3","GPIO4","GPIO5","GPIO6"]
+
     class GPIOPIN:
         """class to contain operations and settings for a GPIO pin"""
         boardSetup = False
+        validPins=[7,11,12,13,15,16,18,22]
+        pinsInUse=[]
         minPin = 10 # verify that this is (min(PIN numbers)
         maxPin = 20 # verify that this is (max(PIN numbers)
     
@@ -52,14 +72,14 @@ if(PROGMODE == "real"):
             return
         
         def setLevel(self, level):
-            # set the GPIO to an arbitrary value (0-3.3 v?)
+            # set the GPIO to an arbitrary value (TODO 0-3.3 v?)
             self.status = string(level)
             # TODO: verify the level is in range
             print( "Pin {0} set to {1:0.00}v".format(self.pin, self.status) )
             # TODO set pin level here
             return
     
-        def set(self, status):
+        def setStatus(self, status):
             if (status=="on"):
                 self.on()
             elif (status == "off" ):
@@ -100,15 +120,14 @@ def toggleLED():
         output = "off"
     return output
 
-def showiAllStatus():
-    n = len(LEDS)
+def showAllStatus():
     line1 = ""
-    for i in range(0,n):
-        line1 += "=LED({0})=".format(i)
+    for led in LEDS:
+        line1 += "=LED({0:2d})=".format(led.gpiopin)
     print( line1 )
     line2 = ""
     for led in LEDS:
-       line2 += " {0}  ".format(led._status)
+       line2 += "  {0}  ".format(led._status)
     print( line2 )
         
 def switchRadomLED():
@@ -121,11 +140,16 @@ def main():
     # define a list of lights
     random.seed(None)
     pinoffset = 0 # integer representing the lowest numbered GPIO pin - 1
-    for i in range(0,10):
+    validPins=[7,11,12,13,15,16,18,22]
+    for e in eventList: print("GPIOPin: {0}, trigger time: {1}, setting: {2}")
+    pincount=0
+    for pin in validPins:
         if (PROGMODE == "sim"):
-            LEDS.append(Light(i, pinoffset, False))
+            LEDS.append(Light(pincount, pin, False))
+            pincount += 1
         elif (PROGMODE == "real"):
-            LEDS.append(Light(i, i+pinoffset , False))
+            LEDS.append(Light(pincount, pin , False))
+            pincount += 1
         else:
             print("Invalid mode '{0}' specified")
             sys.exit()
@@ -135,7 +159,7 @@ def main():
         for i in range(0,24):
             print( "It's {0}:00: ".format(i) )
             print( "LED status = {0}".format(toggleLED()) )
-            showiAllStatus()
+            showAllStatus()
             switchRadomLED()
             time.sleep(gsimHrsPerSec)
     
