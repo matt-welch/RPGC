@@ -16,13 +16,13 @@ def turnOffOnePin(light):
 def turnOnOnePin(light):
    GPIO.output(light, GPIO.HIGH)
 
-def turnOffPins():
+def turnOffAllPins():
     for light in lights: 
         print("Turning off GPIO {0}".format(light))
         GPIO.output(light, GPIO.LOW)
         sleep(0.5)
 
-def turnOnPins():
+def turnOnAllPins():
     for light in lights: 
         print("Turning on GPIO {0}".format(light))
         GPIO.output(light, GPIO.HIGH)
@@ -30,11 +30,11 @@ def turnOnPins():
 
 def main():
     setLights()
-    turnOffPins()
+    turnOffAllPins()
     sleep(4)
-    turnOnPins()
+    turnOnAllPins()
     sleep(4)
-    turnOffPins()
+    turnOffAllPins()
     sleep(4)
     
     while 1:
